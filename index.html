@@ -85,27 +85,54 @@
 
     const photoInput = document.getElementById("photo");
     const preview = document.getElementById("preview");
-    let uploadedImageURL = "";
+    let cloudinaryImageURL = "";
 
     photoInput.addEventListener("change", function () {
       const file = photoInput.files[0];
       if (file && file.type.startsWith("image/")) {
         const reader = new FileReader();
         reader.onload = function (e) {
-          uploadedImageURL = e.target.result;
-          preview.src = uploadedImageURL;
+          preview.src = e.target.result;
           preview.style.display = "block";
         };
         reader.readAsDataURL(file);
       } else {
-        uploadedImageURL = "";
         preview.style.display = "none";
       }
     });
 
     function sendToWhatsApp(e) {
       e.preventDefault();
+      const file = photoInput.files[0];
 
+      if (file) {
+        uploadToCloudinary(file).then(imageUrl => {
+          cloudinaryImageURL = imageUrl;
+          openWhatsApp();
+        });
+      } else {
+        openWhatsApp();
+      }
+    }
+
+    function uploadToCloudinary(file) {
+      const url = 'https://api.cloudinary.com/v1_1/dixfwjrnw/image/upload';
+      const formData = new FormData();
+      formData.append('file', file);
+
+      return fetch(url, {
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => data.secure_url)
+      .catch(err => {
+        alert('Upload gagal, kirim tanpa foto.');
+        return "";
+      });
+    }
+
+    function openWhatsApp() {
       const waNumber = document.getElementById('waNumber').value;
       const address = document.getElementById('address').value;
       const treatment = document.getElementById('treatment').value;
@@ -115,12 +142,12 @@
                     `🏠 Alamat: ${address}%0A` +
                     `🧼 Treatment: ${treatment}%0A`;
 
-      if (uploadedImageURL) {
-        message += `%0A📸 Saya juga melampirkan foto laundry (silakan minta secara manual): [Terlampir]`;
+      if (cloudinaryImageURL) {
+        message += `%0A📸 Foto Laundry: ${cloudinaryImageURL}`;
       }
 
-      const target = '6289676838437'; // dummy number
-      const url = `https://wa.me/${target}?text=${message}`;
+      const target = '6289676838437';
+      const url = `https://wa.me/${target}?text=${encodeURIComponent(message)}`;
       window.open(url, '_blank');
     }
   </script>
