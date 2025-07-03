@@ -49,6 +49,13 @@
       max-width: 100%;
       display: none;
     }
+    #loading {
+      display: none;
+      text-align: center;
+      margin-top: 15px;
+      font-style: italic;
+      color: #555;
+    }
   </style>
 </head>
 <body>
@@ -69,6 +76,7 @@
       <input type="file" id="photo" accept="image/*">
       <img id="preview" alt="Preview" />
     </label>
+    <div id="loading">Uploading image...</div>
     <button type="submit">Send to WhatsApp</button>
   </form>
 
@@ -85,6 +93,7 @@
 
     const photoInput = document.getElementById("photo");
     const preview = document.getElementById("preview");
+    const loading = document.getElementById("loading");
     let cloudinaryImageURL = "";
 
     photoInput.addEventListener("change", function () {
@@ -106,8 +115,10 @@
       const file = photoInput.files[0];
 
       if (file) {
+        loading.style.display = 'block';
         uploadToCloudinary(file).then(imageUrl => {
           cloudinaryImageURL = imageUrl;
+          loading.style.display = 'none';
           openWhatsApp();
         });
       } else {
@@ -115,21 +126,32 @@
       }
     }
 
-    function uploadToCloudinary(file) {
-      const url = 'https://api.cloudinary.com/v1_1/dixfwjrnw/image/upload';
+    async function uploadToCloudinary(file) {
+      const cloudName = 'dixfwjrnw';
+      const uploadPreset = 'default';
+      const timestamp = Math.floor(Date.now() / 1000);
+      const apiKey = '193589437831329';
+
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('upload_preset', uploadPreset);
+      formData.append('api_key', apiKey);
+      formData.append('timestamp', timestamp);
 
-      return fetch(url, {
-        method: 'POST',
-        body: formData
-      })
-      .then(res => res.json())
-      .then(data => data.secure_url)
-      .catch(err => {
+      const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+        return data.secure_url;
+      } catch (err) {
         alert('Upload gagal, kirim tanpa foto.');
+        loading.style.display = 'none';
         return "";
-      });
+      }
     }
 
     function openWhatsApp() {
