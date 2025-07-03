@@ -117,19 +117,19 @@
       if (file) {
         loading.style.display = 'block';
         uploadToCloudinary(file).then(imageUrl => {
-          cloudinaryImageURL = imageUrl;
           loading.style.display = 'none';
-          openWhatsApp();
+          openWhatsApp(imageUrl);
         });
       } else {
-        openWhatsApp();
+        openWhatsApp("");
       }
     }
 
     async function uploadToCloudinary(file) {
       const cloudName = 'dixfwjrnw';
       const uploadPreset = 'default';
-      const timestamp = Math.floor(Date.now() / 1000);
+      const waNumber = document.getElementById('waNumber').value;
+      const timestamp = waNumber + "-" + Math.floor(Date.now() / 1000);
       const apiKey = '193589437831329';
 
       const formData = new FormData();
@@ -154,22 +154,26 @@
       }
     }
 
-    function openWhatsApp() {
+    function openWhatsApp(cloudinaryImageURL) {
       const waNumber = document.getElementById('waNumber').value;
       const address = document.getElementById('address').value;
       const treatment = document.getElementById('treatment').value;
 
-      let message = `Halo, saya ingin request laundry:%0A%0A` +
-                    `📞 Nomor WA: ${waNumber}%0A` +
-                    `🏠 Alamat: ${address}%0A` +
-                    `🧼 Treatment: ${treatment}%0A`;
+      let message = [
+        "Halo, saya ingin request laundry:",
+        "",
+        `📞 Nomor WA: ${waNumber}`,
+        `🏠 Alamat: ${address}`,
+        `🧼 Treatment: ${treatment}`
+      ];
 
       if (cloudinaryImageURL) {
-        message += `%0A📸 Foto Laundry: ${cloudinaryImageURL}`;
+        message.push(`📸 Foto Laundry: ${cloudinaryImageURL}`);
       }
 
+      const finalMessage = encodeURIComponent(message.join('\n'));
       const target = '6289676838437';
-      const url = `https://wa.me/${target}?text=${encodeURIComponent(message)}`;
+      const url = `https://wa.me/${target}?text=${finalMessage}`;
       window.open(url, '_blank');
     }
   </script>
